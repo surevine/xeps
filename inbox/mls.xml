@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE xep SYSTEM 'xep.dtd' [
+  <!ENTITY % ents SYSTEM 'xep.ent'>
+%ents;
+        <!ENTITY namespace "urn:xmpp:mfa:0">
+        <!ENTITY mls-arch "<span class='ref'><link url='http://tools.ietf.org/html/draft-omara-mls-architecture'>draft-omara-mls-architecture</link></span> <note>draft-omara-mls-architecture: Messaging Layer Security Architecture &lt;<link url='http://tools.ietf.org/html/draft-omara-mls-architecture'>http://tools.ietf.org/html/draft-omara-mls-architecture</link>&gt;.</note>" >
+        <!ENTITY mls-proto "<span class='ref'><link url='http://tools.ietf.org/html/draft-barnes-mls-protocol'>draft-barnes-mls-protocol</link></span> <note>draft-barnes-mls-protocol: The Messaging Layer Security (MLS) Protocol &lt;<link url='http://tools.ietf.org/html/draft-barnes-mls-protocol'>http://tools.ietf.org/html/draft-barnes-mls-protocol</link>&gt;.</note>" >
+]>
+<?xml-stylesheet type='text/xsl' href='xep.xsl'?>
+<xep>
+<header>
+  <title>Messaginf Layer Security for XMPP</title>
+  <abstract>This specification defines an implementation of Messaging Layer Security for XMPP.</abstract>
+  &LEGALNOTICE;
+  <number>XXXX</number>
+  <status>Experimental</status>
+  <type>Standards Track</type>
+  <sig>Standards</sig>
+  <approver>Council</approver>
+  <dependencies>
+    <spec>XMPP Core</spec>
+  </dependencies>
+  <supersedes/>
+  <supersededby/>
+  <shortname>message-retract</shortname>
+  &dcridland;
+  <revision>
+    <version>0.0.1</version>
+    <date>2018-02-04</date>
+    <initials>dwd</initials>
+    <remark><p>First draft.</p></remark>
+  </revision>
+</header>
+<section1 topic='Introduction' anchor='intro'>
+  <p>This document describes the implementation of the Messaging Layer Security (MLS) Protocol for XMPP. MLS provides a
+    security layer for group messaging applications, and also an architecture which an implementation within a
+    particular protocol conforms.</p>
+  <p>This provides XMPP with the capabilities of MLS, namely a security layer resistant to eavesdropping, tampering, and
+  message forgery.</p>
+</section1>
+  <section1 topic="Dramatis Personae" anchor="terms">
+    <p>&mls-arch; defines a number of actors within an implementation. The Messaging Service (MS) in this instance is XMPP.</p>
+    <p>The Authentication Service is a virtual XMPP service provided by each cooperating service.</p>
+    <p>The Delivery Service is integral to a number of XMPP entities, including the user's accounts, MUC rooms, and MIX channels.</p>
+    <p>Note that for two users to participate in MLS, each users' clients MUST support MLS, and each user's server MUST support the server portion of the specification. Finally, if the users are communicating via a chatroom, the MUC portion of the specification MUST be supported.</p>
+  </section1>
+  <section1 topic="Encoding" anchor="enc">
+    <p>&mls-proto; defines no particular encoding, and instead defines the MLS protocol in terms of an abstract syntax. In order to be transported in XMPP, therefore, a suitable encoding is required.</p>
+    <p>This encoding will need to be stable, since parts of the encoding will be signed, and Canonical XML is a rarely supported.</p>
+    <p>The solution chosen is to use a minimalist XML construct, which is then trivial to canonicalize, and will generally be stable through rewrites. We will refer to this as Restricted XML, or rXML.</p>
+    <section2 topic="rXML">
+      <p>Rules for rXML are as follows:</p>
+      <ul>
+        <li>All elements must have no prefix.</li>
+        <li>Top-level elements have no attributes aside from the xmlns attribute used to declare the namespace, which MUST be present.</li>
+        <li>Child elements have zero or one attributes which MUST NOT be namespaced.</li>
+        <li>Elements in rXML are either empty, have a textual value, or have one or more child elements.</li>
+      </ul>
+      <p>Reserialization by servers typically leaves the XML in the same state, and since there are no attribute ordering requirements (since there are never more than one attribute), the only consideration is whether the rXML has been rewritten to use a prefix, or is not delcaring its namespace on the top-most element. This is thought to be easy to verify, and simple to generate.</p>
+    </section2>
+  </section1>
+  <section1 topic="Messages">
+    <p>In most cases, MLS messages are encapsulated as &IQ; or &MESSAGE; stanzas containing a single element qualified by the '&namespace;' namespace.</p>
+    <p>This element can be generated systematically from the MLS definitions.</p>
+    <ul>
+      <li>Numeric types such as uint16 and uint32 become empty elements of the same name with an attribute named for the type containing the numeric value in decimal without leading zeros, for example 'unit16 length' of value 2468 would become &lt;length uint16='2468'/></li>
+      <li>Opaque values become elements containing a base64-encoded string, for example &lt;group_id>iusugcsagFYug876==&lt;/group_id>.</li>
+      <li>Arrays contain a sequence of child elements. The name of the child elements MUST be the immediate type, for example &lt;cipher_suites>&lt;CipherSuite>...&lt;/CipherSuite>&lt;/cipher_suite>.</li>
+      <li>Structs contain their members as a set of child elements in the sequence they are defined.</li>
+    </ul>
+  </section1>
+<section1 topic='Security Considerations' anchor='security'>
+  <p>Security considerations are extensively discussed in &mls-arch; and &mls-proto;.</p>
+</section1>
+<section1 topic='IANA Considerations' anchor='iana'>
+  <p>None.</p>
+</section1>
+<section1 topic='XMPP Registrar Considerations' anchor='registrar'>
+  <section2 topic='Protocol Namespaces' anchor='ns'>
+    <p>The &REGISTRAR; shall include '&namespace;' in its registry of protocol namespaces (see &NAMESPACES;).</p>
+    <ul>
+      <li>&namespace;</li>
+    </ul>
+  </section2>
+  <section2 topic='Protocol Versioning' anchor='registrar-versioning'>
+    &NSVER;
+  </section2>
+</section1>
+<section1 topic='XML Schema' anchor='schema'>
+  <code><![CDATA[
+<?xml version='1.0' encoding='UTF-8'?>
+
+<xs:schema
+    xmlns:xs='http://www.w3.org/2001/XMLSchema'
+    targetNamespace='urn:xmpp:todo'
+    xmlns='urn:xmpp:todo'
+    elementFormDefault='qualified'>
+
+
+
+</xs:schema>
+    ]]></code>
+</section1>
+</xep>
